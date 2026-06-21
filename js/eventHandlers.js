@@ -77,6 +77,51 @@ class EventHandlers {
         });
     }
 
+    bindPerspectiveControls() {
+        const enabledCheckbox = document.getElementById('perspectiveEnabled');
+        if (enabledCheckbox) {
+            enabledCheckbox.addEventListener('change', (e) => {
+                this.app.setPerspectiveOption('enabled', e.target.checked);
+            });
+        }
+
+        const perspectiveParams = [
+            { key: 'rotateX', scale: 1, suffix: '°' },
+            { key: 'rotateY', scale: 1, suffix: '°' },
+            { key: 'rotateZ', scale: 1, suffix: '°' },
+            { key: 'perspective', scale: 1, suffix: 'px' },
+            { key: 'pageScale', scale: 0.01, suffix: '%', displayScale: 1 },
+            { key: 'lightX', scale: 0.01, suffix: '', decimals: 2 },
+            { key: 'lightY', scale: 0.01, suffix: '', decimals: 2 },
+            { key: 'ambientIntensity', scale: 0.01, suffix: '%', displayScale: 1 },
+            { key: 'diffuseIntensity', scale: 0.01, suffix: '%', displayScale: 1 },
+            { key: 'specularIntensity', scale: 0.01, suffix: '%', displayScale: 1 },
+            { key: 'shadowOpacity', scale: 0.01, suffix: '%', displayScale: 1 },
+            { key: 'shadowBlur', scale: 1, suffix: 'px' }
+        ];
+
+        perspectiveParams.forEach(({ key, scale, suffix, displayScale, decimals }) => {
+            const input = document.getElementById(key);
+            const valueDisplay = document.getElementById(key + 'Value');
+            if (input && valueDisplay) {
+                input.addEventListener('input', (e) => {
+                    const rawValue = parseFloat(e.target.value);
+                    const optionValue = rawValue * scale;
+                    let displayValue;
+                    if (displayScale !== undefined) {
+                        displayValue = Math.round(rawValue * displayScale);
+                    } else if (decimals !== undefined) {
+                        displayValue = optionValue.toFixed(decimals);
+                    } else {
+                        displayValue = rawValue;
+                    }
+                    valueDisplay.textContent = displayValue + suffix;
+                    this.app.setPerspectiveOption(key, optionValue);
+                });
+            }
+        });
+    }
+
     bindTextInput() {
         document.getElementById('textInput').addEventListener('input', () => {
             this.app.debouncedGenerate();
@@ -265,6 +310,7 @@ class EventHandlers {
         this.bindStyleButtons();
         this.bindColorButtons();
         this.bindParamSliders();
+        this.bindPerspectiveControls();
         this.bindTextInput();
         this.bindActionButtons();
         this.bindPageNavigation();

@@ -24,6 +24,8 @@ class HandwritingRenderer {
         this.seed = Math.random();
         this._textLinesCache = null;
         this._cacheKey = '';
+        this._offscreenCanvas = null;
+        this._offscreenCtx = null;
     }
 
     setOptions(options) {
@@ -116,65 +118,85 @@ class HandwritingRenderer {
         const { pageWidth, pageHeight, padding, fontSize, lineHeight, charSpacing,
                 paperColor, inkColor, fontFamily, weight, slantAngle, inkDensity,
                 randomOffset, strokeNoise } = this.options;
-        
+
         this.canvas.width = pageWidth;
         this.canvas.height = pageHeight;
-        
-        const ctx = this.ctx;
-        
-        PaperEffects.addPaperTexture(ctx, pageWidth, pageHeight, paperColor, this.seed);
-        PaperEffects.addPaperFiberEffect(ctx, pageWidth, pageHeight, paperColor, this.seed);
-        
-        const pages = this.calculatePages();
-        this.pages = pages;
-        
-        if (pageIndex >= pages.length) {
-            pageIndex = pages.length - 1;
+
+        if (!this._offscreenCanvas || this._offscreenCanvas.width !== pageWidth || this._offscreenCanvas.height !== pageHeight) {
+            this._offscreenCanvas = document.createElement('canvas');
+            this._offscreenCanvas.width = pageWidth;
+            this._offscreenCanvas.height = pageHeight;
+            this._offscreenCtx = this._offscreenCanvas.getContext('2d');
         }
-        this.currentPage = pageIndex;
-        
-        const pageLines = pages[pageIndex];
-        const lineHeightPx = fontSize * lineHeight;
-        const startY = padding;
-        
-        let charIndexOffset = 0;
-        for (let i = 0; i < pageIndex; i++) {
-            charIndexOffset += pages[i].reduce((sum, line) => sum + line.length, 0);
-        }
-        
-        let charCount = 0;
-        ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
-        
-        for (let lineIndex = 0; lineIndex < pageLines.length; lineIndex++) {
-            const line = pageLines[lineIndex];
-            const y = startY + lineIndex * lineHeightPx;
-            let x = padding;
-            
-            for (let charIndex = 0; charIndex < line.length; charIndex++) {
-                const char = line[charIndex];
-                const globalCharIndex = charIndexOffset + charCount;
-                
-                TextEffects.drawChar(ctx, char, x, y, {
-                    charIndex: globalCharIndex,
-                    lineIndex,
-                    seed: this.seed,
-                    fontSize,
-                    fontFamily,
-                    weight,
-                    slantAngle,
-                    inkColor,
-                    inkDensity,
-                    randomOffset,
-                    strokeNoise
-                });
-                
-                const charWidth = ctx.measureText(char).width + charSpacing;
-                x += charWidth;
-                charCount++;
+
+        const renderToContext = (ctx) => {
+            PaperEffects.addPaperTexture(ctx, pageWidth, pageHeight, paperColor, this.seed);
+            PaperEffects.addPaperFiberEffect(ctx, pageWidth, pageHeight, paperColor, this.seed);
+
+            const pages = this.calculatePages();
+            this.pages = pages;
+
+            if (pageIndex >= pages.length) {
+                pageIndex = pages.length - 1;
             }
+            this.currentPage = pageIndex;
+
+            const pageLines = pages[pageIndex];
+            const lineHeightPx = fontSize * lineHeight;
+            const startY = padding;
+
+            let charIndexOffset = 0;
+            for (let i = 0; i < pageIndex; i++) {
+                charIndexOffset += pages[i].reduce((sum, line) => sum + line.length, 0);
+            }
+
+            let charCount = 0;
+            ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
+
+            for (let lineIndex = 0; lineIndex < pageLines.length; lineIndex++) {
+                const line = pageLines[lineIndex];
+                const y = startY + lineIndex * lineHeightPx;
+                let x = padding;
+
+                for (let charIndex = 0; charIndex < line.length; charIndex++) {
+                    const char = line[charIndex];
+                    const globalCharIndex = charIndexOffset + charCount;
+
+                    TextEffects.drawChar(ctx, char, x, y, {
+                        charIndex: globalCharIndex,
+                        lineIndex,
+                        seed: this.seed,
+                        fontSize,
+                        fontFamily,
+                        weight,
+                        slantAngle,
+                        inkColor,
+                        inkDensity,
+                        randomOffset,
+                        strokeNoise
+                    });
+
+                    const charWidth = ctx.measureText(char).width + charSpacing;
+                    x += charWidth;
+                    charCount++;
+                }
+            }
+
+            return pages.length;
+        };
+
+        const pageCount = renderToContext(this.ctx);
+        this._offscreenCtx.clearRect(0, 0, this._offscreenCanvas.width, this._offscreenCanvas.height);
+        renderToContext(this._offscreenCtx);
+
+        return pageCount;
+    }
+
+    getOutputCanvas() {
+        if (this._offscreenCanvas) {
+            return this._offscreenCanvas;
         }
-        
-        return pages.length;
+        return this.canvas;
     }
 
     generateAllPages() {

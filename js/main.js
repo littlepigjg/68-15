@@ -6,29 +6,51 @@ class HandwritingApp {
         this.exportHandlers = new ExportHandlers(this);
         this.eventHandlers = new EventHandlers(this);
         this.fontManager = new FontManager();
-        
+        this.perspective3D = null;
+
         this.currentStyle = 'kaishu';
         this.customFontFamily = null;
         this.debounceTimer = null;
-        
+        this._perspectiveDebounceTimer = null;
+
         this.init();
     }
 
     async init() {
         this.showLoading();
-        
+
         try {
             await FontLoader.loadAllFonts();
             console.log('所有字体预加载完成');
         } catch (error) {
             console.warn('预加载字体失败:', error);
         }
-        
+
+        this._initPerspective3D();
+
         this.eventHandlers.bindAll();
         await this.eventHandlers.applyStyle('kaishu');
         this.generatePreview();
-        
+
         this.hideLoading();
+    }
+
+    _initPerspective3D() {
+        const container = document.getElementById('canvasContainer');
+        if (container && typeof Perspective3D !== 'undefined') {
+            this.perspective3D = new Perspective3D(container, this.canvas);
+            this.canvas.classList.add('hidden-canvas');
+        }
+    }
+
+    setPerspectiveOption(key, value) {
+        if (!this.perspective3D) return;
+        if (this._perspectiveDebounceTimer) {
+            clearTimeout(this._perspectiveDebounceTimer);
+        }
+        this._perspectiveDebounceTimer = setTimeout(() => {
+            this.perspective3D.setOptions({ [key]: value });
+        }, 10);
     }
 
     debouncedGenerate() {
@@ -43,17 +65,22 @@ class HandwritingApp {
     generatePreview() {
         const text = document.getElementById('textInput').value;
         this.renderer.setOptions({ text });
-        
+
         this.showLoading();
-        
+
         requestAnimationFrame(() => {
             const startTime = performance.now();
-            
+
             const pageCount = this.renderer.renderPage(this.renderer.currentPage);
-            
+
+            if (this.perspective3D) {
+                this.perspective3D.setSourceCanvas(this.renderer.getOutputCanvas());
+                this.perspective3D.render();
+            }
+
             const endTime = performance.now();
             console.log(`生成耗时: ${(endTime - startTime).toFixed(2)}ms, 共 ${pageCount} 页`);
-            
+
             this.updatePageInfo();
             this.hideLoading();
         });
@@ -62,12 +89,16 @@ class HandwritingApp {
     changePage(direction) {
         const pageCount = this.renderer.getPageCount();
         let newPage = this.renderer.currentPage + direction;
-        
+
         if (newPage < 0) newPage = 0;
         if (newPage >= pageCount) newPage = pageCount - 1;
-        
+
         if (newPage !== this.renderer.currentPage) {
             this.renderer.renderPage(newPage);
+            if (this.perspective3D) {
+                this.perspective3D.setSourceCanvas(this.renderer.getOutputCanvas());
+                this.perspective3D.render();
+            }
             this.updatePageInfo();
         }
     }
@@ -76,7 +107,7 @@ class HandwritingApp {
         const current = this.renderer.currentPage + 1;
         const total = this.renderer.getPageCount();
         document.getElementById('pageInfo').textContent = `第 ${current} 页 / 共 ${total} 页`;
-        
+
         document.getElementById('prevPage').disabled = this.renderer.currentPage === 0;
         document.getElementById('nextPage').disabled = this.renderer.currentPage >= total - 1;
     }
@@ -113,6 +144,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         window.app = new HandwritingApp();
     };
-    
+
     initApp();
 });

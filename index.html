@@ -126,6 +126,103 @@
                 </div>
 
                 <div class="control-section">
+                    <h3>🎭 3D透视效果</h3>
+                    <div class="param-group">
+                        <label>
+                            <span>启用3D效果</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="perspectiveEnabled" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>上下俯仰角</span>
+                            <span class="value" id="rotateXValue">55°</span>
+                        </label>
+                        <input type="range" id="rotateX" min="0" max="85" step="1" value="55">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>左右偏航角</span>
+                            <span class="value" id="rotateYValue">-15°</span>
+                        </label>
+                        <input type="range" id="rotateY" min="-60" max="60" step="1" value="-15">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>自旋角度</span>
+                            <span class="value" id="rotateZValue">0°</span>
+                        </label>
+                        <input type="range" id="rotateZ" min="-45" max="45" step="1" value="0">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>透视距离</span>
+                            <span class="value" id="perspectiveValue">1200px</span>
+                        </label>
+                        <input type="range" id="perspective" min="400" max="3000" step="50" value="1200">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>纸张缩放</span>
+                            <span class="value" id="pageScaleValue">75%</span>
+                        </label>
+                        <input type="range" id="pageScale" min="30" max="100" step="1" value="75">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>光照水平方向</span>
+                            <span class="value" id="lightXValue">-0.5</span>
+                        </label>
+                        <input type="range" id="lightX" min="-100" max="100" step="1" value="-50">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>光照垂直方向</span>
+                            <span class="value" id="lightYValue">-0.7</span>
+                        </label>
+                        <input type="range" id="lightY" min="-100" max="100" step="1" value="-70">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>环境光强度</span>
+                            <span class="value" id="ambientIntensityValue">35%</span>
+                        </label>
+                        <input type="range" id="ambientIntensity" min="0" max="100" step="1" value="35">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>漫反射强度</span>
+                            <span class="value" id="diffuseIntensityValue">60%</span>
+                        </label>
+                        <input type="range" id="diffuseIntensity" min="0" max="100" step="1" value="60">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>高光强度</span>
+                            <span class="value" id="specularIntensityValue">25%</span>
+                        </label>
+                        <input type="range" id="specularIntensity" min="0" max="100" step="1" value="25">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>阴影浓度</span>
+                            <span class="value" id="shadowOpacityValue">40%</span>
+                        </label>
+                        <input type="range" id="shadowOpacity" min="0" max="100" step="1" value="40">
+                    </div>
+                    <div class="param-group">
+                        <label>
+                            <span>阴影模糊</span>
+                            <span class="value" id="shadowBlurValue">25px</span>
+                        </label>
+                        <input type="range" id="shadowBlur" min="0" max="60" step="1" value="25">
+                    </div>
+                </div>
+
+                <div class="control-section">
                     <h3>📄 页面设置</h3>
                     <div class="param-group">
                         <label>
@@ -191,6 +288,7 @@
     <script src="js/eventHandlers.js"></script>
     <script src="js/exportHandlers.js"></script>
     <script src="js/renderer.js"></script>
+    <script src="js/perspective3D.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
